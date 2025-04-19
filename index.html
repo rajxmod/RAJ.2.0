@@ -1,0 +1,238 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAJ ULTRA 2.0</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.0/css/all.min.css"/>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Georgia', serif;
+    }
+
+    body {
+      background: linear-gradient(to bottom right, #fcd9d9, #ff4d4d);
+      height: 100vh;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .card {
+      background: #fff;
+      border-radius: 25px;
+      padding: 35px 25px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 8px 25px rgba(0, 0, 0, 0.15);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .card::before,
+    .card::after {
+      content: '';
+      position: absolute;
+      width: 100px;
+      height: 100px;
+      background: #ff4d4d;
+      border-radius: 50%;
+      z-index: 0;
+      opacity: 0.15;
+    }
+
+    .card::before {
+      top: -30px;
+      right: -30px;
+    }
+
+    .card::after {
+      bottom: -30px;
+      left: -30px;
+    }
+
+    .logo {
+      width: 90px;
+      height: 90px;
+      border-radius: 50%;
+      border: 3px solid #ff3333;
+      object-fit: cover;
+      margin-bottom: 10px;
+    }
+
+    .title {
+      font-size: 22px;
+      font-weight: bold;
+      color: #333;
+      margin-bottom: 25px;
+      font-style: italic;
+    }
+
+    .input-box {
+      display: flex;
+      align-items: center;
+      background: #f1f1f1;
+      border-radius: 30px;
+      padding: 10px 15px;
+      margin: 15px 0;
+    }
+
+    .input-box .icon {
+      color: #999;
+      margin-right: 10px;
+    }
+
+    .input-box input {
+      border: none;
+      outline: none;
+      background: transparent;
+      width: 100%;
+      font-size: 14px;
+    }
+
+    .login-btn {
+      width: 100%;
+      padding: 12px;
+      margin-top: 15px;
+      border: none;
+      border-radius: 30px;
+      background: linear-gradient(to right, #ff3333, #ff6666);
+      color: white;
+      font-size: 16px;
+      font-weight: bold;
+      box-shadow: 0 5px 15px rgba(255, 50, 50, 0.4);
+      cursor: pointer;
+      font-style: italic;
+      transition: 0.3s ease;
+    }
+
+    .login-btn:hover {
+      opacity: 0.9;
+    }
+
+    .device-id {
+      margin-top: 20px;
+      color: #ff3333;
+      font-weight: 500;
+      cursor: pointer;
+    }
+
+    .socials {
+      margin-top: 15px;
+      display: flex;
+      justify-content: center;
+      gap: 20px;
+    }
+
+    .socials a {
+      color: #ff3333;
+      font-size: 20px;
+      transition: 0.3s;
+    }
+
+    .socials a:hover {
+      transform: scale(1.2);
+    }
+
+    #messageText {
+      margin-top: 10px;
+      font-size: 14px;
+      font-weight: bold;
+    }
+  </style>
+</head>
+<body>
+  <div class="card">
+    <img src="https://i.postimg.cc/9F14k2M7/cropped-image-4.png" alt="TKS Logo" class="logo" />
+    <h2 class="title">RAJ ULTRA 2.0</h2>
+    
+    <div class="input-box">
+      <i class="fas fa-user icon"></i>
+      <input type="text" id="keyInput" placeholder="Enter your key" />
+    </div>
+
+    <p id="messageText"></p>
+
+    <button class="login-btn" id="loginBtn">LOGIN</button>
+
+    <p class="device-id" onclick="copyDeviceID()">Copy Device ID</p>
+
+    <div class="socials">
+      <a href="https://t.me/+PgGJLGiXjKExN2Vl"><i class="fa-brands fa-telegram"></i></a>
+      <a href="https://www.instagram.com/crazy_jeet_1234?igsh=eHA1ajEwZ3A3Nzhk"><i class="fa-brands fa-instagram"></i></a>
+    </div>
+  </div>
+
+  <!-- Firebase Auth -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, get, update } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD89CQpILmaxVdH-X7L-Ex4rW-XIBA3vHU",
+      authDomain: "webai-b6629.firebaseapp.com",
+      databaseURL: "https://webai-b6629-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "webai-b6629",
+      storageBucket: "webai-b6629.appspot.com",
+      messagingSenderId: "358930931757",
+      appId: "1:358930931757:web:ed7b1ab7274bbdb3b7d8a4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    document.addEventListener("DOMContentLoaded", () => {
+      const keyInput = document.getElementById("keyInput");
+      const loginBtn = document.getElementById("loginBtn");
+      const messageText = document.getElementById("messageText");
+      const deviceID = navigator.userAgent || "UnknownDevice";
+
+      loginBtn.addEventListener("click", async () => {
+        const key = keyInput.value.trim();
+        if (key === "") return;
+
+        const snapshot = await get(ref(db, "keys"));
+        if (!snapshot.exists()) {
+          messageText.textContent = "KEY WASN'T EXIST";
+          messageText.style.color = "red";
+          return;
+        }
+
+        let keyFound = false;
+        let keyID = null;
+        let existingDevice = null;
+
+        snapshot.forEach(childSnapshot => {
+          const data = childSnapshot.val();
+          if (data.key === key) {
+            keyFound = true;
+            keyID = childSnapshot.key;
+            existingDevice = data.deviceID;
+          }
+        });
+
+        if (!keyFound) {
+          messageText.textContent = "KEY WASN'T EXIST";
+          messageText.style.color = "red";
+        } else if (existingDevice !== "NA" && existingDevice !== deviceID) {
+          messageText.textContent = "The Key Is Already Login By Another User";
+          messageText.style.color = "red";
+        } else {
+          await update(ref(db, "keys/" + keyID), { deviceID });
+          window.location.href = "open.html";
+        }
+      });
+    });
+
+    function copyDeviceID() {
+      const id = navigator.userAgent || "UnknownDevice";
+      navigator.clipboard.writeText(id).then(() => {
+        alert("Device ID Copied:\n" + id);
+      });
+    }
+  </script>
+</body>
+</html>
