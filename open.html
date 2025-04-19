@@ -1,0 +1,186 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>RAJ ULTRA 2.0</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background: linear-gradient(to bottom, #fff5f0, #fbe9e7);
+      margin: 0;
+      padding: 0;
+    }
+    .header {
+      background-color: #b5523b;
+      color: white;
+      text-align: center;
+      padding: 15px;
+      font-size: 20px;
+      font-weight: bold;
+    }
+    .container {
+      max-width: 380px;
+      margin: 20px auto;
+      background-color: white;
+      border-radius: 15px;
+      border: 2px solid #edcfc9;
+      padding: 20px;
+      text-align: center;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+    }
+    .container img {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      margin-bottom: 10px;
+      border: 4px solid #b5523b;
+    }
+    .title {
+      font-weight: bold;
+      color: #b5523b;
+      margin-bottom: 20px;
+      font-size: 18px;
+    }
+    .input-box {
+      border: 2px solid #b5523b;
+      border-radius: 8px;
+      padding: 10px;
+      margin: 10px 0;
+      color: #b5523b;
+      font-weight: bold;
+    }
+    .status {
+      margin-top: 15px;
+      color: #b5523b;
+      font-weight: bold;
+    }
+    .open-game-btn {
+      background-color: #ff3c3c;
+      color: white;
+      padding: 12px 25px;
+      border: none;
+      border-radius: 10px;
+      margin-top: 20px;
+      cursor: pointer;
+      font-size: 16px;
+      box-shadow: 0 4px 10px rgba(0,0,0,0.2);
+    }
+    .open-game-btn:hover {
+      background-color: #d63333;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">RAJ ULTRA 2.0</div>
+  <div class="container" id="content">
+    <img src="https://i.postimg.cc/9F14k2M7/cropped-image-4.png" alt="TKS Logo">
+    <div class="title">RAJ ULTRA MOD 2.0</div>
+    <div class="input-box" id="keyBox">KEY: Loading...</div>
+    <div class="input-box" id="deviceBox">DEVICE: Loading...</div>
+    <div class="input-box" id="expiryBox">EXPIRED: Loading...</div>
+    <div class="input-box" id="countdown">0d 0h 0m 0s</div>
+    <div class="status" id="serverStatus">Connecting to Server...</div>
+    <button class="open-game-btn" id="openGameBtn" disabled>OPEN GAME</button>
+  </div>
+
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-app.js";
+    import { getDatabase, ref, get, set, onValue } from "https://www.gstatic.com/firebasejs/9.6.1/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyD89CQpILmaxVdH-X7L-Ex4rW-XIBA3vHU",
+      authDomain: "webai-b6629.firebaseapp.com",
+      databaseURL: "https://webai-b6629-default-rtdb.asia-southeast1.firebasedatabase.app/",
+      projectId: "webai-b6629",
+      storageBucket: "webai-b6629.appspot.com",
+      messagingSenderId: "358930931757",
+      appId: "1:358930931757:web:ed7b1ab7274bbdb3b7d8a4"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    const keyBox = document.getElementById("keyBox");
+    const deviceBox = document.getElementById("deviceBox");
+    const expiryBox = document.getElementById("expiryBox");
+    const countdownBox = document.getElementById("countdown");
+    const serverStatus = document.getElementById("serverStatus");
+    const openGameBtn = document.getElementById("openGameBtn");
+
+    // Generate unique ID for this device (if not already stored)
+    let deviceID = localStorage.getItem("raj_ultra_device");
+    if (!deviceID) {
+      deviceID = "device_" + Math.random().toString(36).substr(2, 9);
+      localStorage.setItem("raj_ultra_device", deviceID);
+    }
+
+    const keyRef = ref(db, "keys/" + deviceID);
+
+    // Set key + expiry if not already saved
+    get(keyRef).then((snapshot) => {
+      if (!snapshot.exists()) {
+        const expiryDate = new Date();
+        expiryDate.setDate(expiryDate.getDate() + 3); // 3-day validity
+
+        const keyToSave = "RAJ-" + deviceID.toUpperCase();
+
+        set(keyRef, {
+          key: keyToSave,
+          deviceID: deviceID,
+          expiry: expiryDate.toISOString()
+        });
+      }
+    });
+
+    // Fetch and display key info
+    onValue(keyRef, (snapshot) => {
+      const data = snapshot.val();
+      if (data) {
+        const expiry = new Date(data.expiry);
+        keyBox.textContent = "KEY: " + data.key;
+        deviceBox.textContent = "DEVICE: " + data.deviceID;
+        expiryBox.textContent = "EXPIRED: " + expiry.toLocaleString();
+        serverStatus.textContent = "SERVER IS CONNECTED";
+
+        const now = new Date();
+        if (expiry > now) {
+          openGameBtn.disabled = false;
+          openGameBtn.onclick = () => {
+            window.location.href = "https://rajxmod.github.io/Hsisbsv/";
+          };
+        } else {
+          openGameBtn.disabled = true;
+        }
+
+        startCountdown(expiry);
+      }
+    });
+
+    // Countdown function
+    function startCountdown(expiryDate) {
+      function updateCountdown() {
+        const now = new Date();
+        const diff = expiryDate - now;
+
+        if (diff <= 0) {
+          countdownBox.textContent = "Expired";
+          serverStatus.textContent = "KEY HAS EXPIRED";
+          openGameBtn.disabled = true;
+          return;
+        }
+
+        const days = Math.floor(diff / (1000 * 60 * 60 * 24));
+        const hours = Math.floor((diff / (1000 * 60 * 60)) % 24);
+        const minutes = Math.floor((diff / (1000 * 60)) % 60);
+        const seconds = Math.floor((diff / 1000) % 60);
+
+        countdownBox.textContent = `${days}d ${hours}h ${minutes}m ${seconds}s`;
+        setTimeout(updateCountdown, 1000);
+      }
+
+      updateCountdown();
+    }
+  </script>
+</body>
+</html>
